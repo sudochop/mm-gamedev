@@ -1,12 +1,10 @@
 #include <SDL2/SDL.h>
 #include <stdio.h>
+#include <memory>
 
 int main(int argc, char* argv[]) {
 
 	bool running = true;
-
-	SDL_Window* window = NULL;
-	SDL_Surface* screenSurface = NULL;
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 
@@ -14,7 +12,10 @@ int main(int argc, char* argv[]) {
 
 	} else {
 
-		window = SDL_CreateWindow("SDL Skeleton", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 400, 300, SDL_WINDOW_SHOWN);
+		std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window(
+        	SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN), 
+        	SDL_DestroyWindow
+        );
 
 		if(window == NULL) {
 
@@ -24,11 +25,11 @@ int main(int argc, char* argv[]) {
 
 			SDL_Event e;
 
-			screenSurface = SDL_GetWindowSurface(window);
+			SDL_Surface* screenSurface = SDL_GetWindowSurface(window.get());
 
 			SDL_FillRect(screenSurface, NULL, SDL_MapRGB(screenSurface->format, 0x00, 0x00, 0x00));
 
-			SDL_UpdateWindowSurface(window);
+			SDL_UpdateWindowSurface(window.get());
 
 			while(running) {
 				while(SDL_PollEvent(&e) != 0) {
@@ -39,8 +40,6 @@ int main(int argc, char* argv[]) {
 			}
 		}
 	}
-
-	SDL_DestroyWindow(window);
 
 	SDL_Quit();
 
