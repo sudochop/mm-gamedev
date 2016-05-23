@@ -4,7 +4,7 @@
 
 int main(int argc, char* argv[]) {
 
-	bool running = true;
+	bool running {true};
 
 	if(SDL_Init(SDL_INIT_VIDEO) < 0) {
 
