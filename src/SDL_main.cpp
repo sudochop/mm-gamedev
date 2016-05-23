@@ -13,9 +13,9 @@ int main(int argc, char* argv[]) {
 	} else {
 
 		std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window(
-        	SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN), 
-        	SDL_DestroyWindow
-        );
+			SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN), 
+			SDL_DestroyWindow
+		);
 
 		if(window == NULL) {
 
