@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 
 		window = SDL_CreateWindow("SDL Skeleton", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 400, 300, SDL_WINDOW_SHOWN);
 
-	if(window == NULL) {
+		if(window == NULL) {
 
 			printf("Window could not be created. SDL_Error: %s\n", SDL_GetError());
 
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]) {
 		}
 	}
 
-	SDL_DestroyWindow( window );
+	SDL_DestroyWindow(window);
 
 	SDL_Quit();
 
