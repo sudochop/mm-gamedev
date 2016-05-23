@@ -1,29 +1,28 @@
-#include <SDL2/SDL.h>
 #include <stdio.h>
 #include <stdexcept>
 #include <memory>
+
+#include <SDL2/SDL.h>
+
 
 int main(int argc, char* argv[]) {
 
 	bool running {true};
 
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		printf("SDL_Init\n");
-		throw std::runtime_error(SDL_GetError());
+		throw std::runtime_error("SDL_Init");
 	}
 
 	if (SDL_ShowCursor(SDL_DISABLE) < 0) {
-		printf("SDL_ShowCursor\n");
-		throw std::runtime_error(SDL_GetError());
+		throw std::runtime_error("SDL_ShowCursor");
 	}
 
 	std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window(
-		SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN), 
+		SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 640, 480, SDL_WINDOW_SHOWN),
 		SDL_DestroyWindow
 	);
 
-	if(window == NULL) {
-		printf("Window could not be created\n");
+	if(window.get() == NULL) {
 		throw std::runtime_error(SDL_GetError());
 	}
 

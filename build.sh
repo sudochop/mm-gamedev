@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-g++ -std=c++14 -Wall -g -lSDL2 src/main.cpp -o bin/Game
+g++ -Wall -Werror -Wpedantic -std=c++14 -g -lSDL2 src/main.cpp -o bin/Game
