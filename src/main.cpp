@@ -7,6 +7,15 @@
 #include <SDL2/SDL_ttf.h>
 
 
+struct sdl_deleter {
+	void operator()(SDL_Window *p) const { SDL_DestroyWindow(p); }
+	void operator()(SDL_Renderer *p) const { SDL_DestroyRenderer(p); }
+	void operator()(SDL_Texture *p) const { SDL_DestroyTexture(p); }
+	void operator()(SDL_Surface *p) const { SDL_FreeSurface(p); }
+	void operator()(TTF_Font *p) const { TTF_CloseFont(p); }
+};
+
+
 int main(int argc, char* argv[]) {
 
 	bool running {true};
@@ -31,9 +40,9 @@ int main(int argc, char* argv[]) {
 
 
 	// Create our window.
-	std::unique_ptr<SDL_Window, void(*)(SDL_Window*)> window(
+	std::unique_ptr<SDL_Window, sdl_deleter> window(
 		SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_SHOWN),
-		SDL_DestroyWindow
+		sdl_deleter()
 	);
 
 	if (window.get() == nullptr) {
@@ -44,9 +53,9 @@ int main(int argc, char* argv[]) {
 	// Load a system font.
 	const std::string fontPath {"src/resources/fonts/Inconsolata-Regular.ttf"};
 
-	std::unique_ptr<TTF_Font, void(*)(TTF_Font*)> font(
+	std::unique_ptr<TTF_Font, sdl_deleter> font(
 		TTF_OpenFont(fontPath.c_str(), 14),
-		TTF_CloseFont
+		sdl_deleter()
 	);
 
 	if (font == nullptr) {
@@ -55,9 +64,9 @@ int main(int argc, char* argv[]) {
 
 
 	// Create renderer.
-	std::unique_ptr<SDL_Renderer, void(*)(SDL_Renderer*)> renderer(
+	std::unique_ptr<SDL_Renderer, sdl_deleter> renderer(
 		SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED),
-		SDL_DestroyRenderer
+		sdl_deleter()
 	);
 
 	if (renderer.get() == nullptr) {
@@ -84,9 +93,9 @@ int main(int argc, char* argv[]) {
 		}
 
 		// Create text surface.
-		std::unique_ptr<SDL_Surface, void(*)(SDL_Surface*)> textSurface(
+		std::unique_ptr<SDL_Surface, sdl_deleter> textSurface(
 			TTF_RenderText_Solid(font.get(), ("Frame: " + std::to_string(frame)).c_str(), {255, 255, 255}),
-			SDL_FreeSurface
+			sdl_deleter()
 		);
 
 		if (textSurface.get() == nullptr) {
@@ -95,9 +104,9 @@ int main(int argc, char* argv[]) {
 
 
 		// Create text texture.
-		std::unique_ptr<SDL_Texture, void(*)(SDL_Texture*)> textTexture(
+		std::unique_ptr<SDL_Texture, sdl_deleter> textTexture(
 			SDL_CreateTextureFromSurface(renderer.get(), textSurface.get()),
-			SDL_DestroyTexture
+			sdl_deleter()
 		);
 
 		if (textTexture.get() == nullptr) {
@@ -118,7 +127,7 @@ int main(int argc, char* argv[]) {
 
 
 		frame++;
-		
+
 	}
 
 	SDL_Quit();
