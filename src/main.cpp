@@ -20,6 +20,53 @@ struct SDLDeleter {
 };
 
 
+int renderDebugText(const std::unique_ptr<SDL_Renderer, SDLDeleter> &renderer, int x, int y, const std::string &msg) {
+
+	static const std::string fontpath {"src/resources/fonts/Inconsolata-Regular.ttf"};
+
+	static std::unique_ptr<TTF_Font, SDLDeleter> font(
+		TTF_OpenFont(fontpath.c_str(), 14),
+		SDLDeleter()
+	);
+
+	if (font == nullptr) {
+		throw std::runtime_error("Failed to load font at " + fontpath);
+	}
+
+
+	// Create text surface.
+	std::unique_ptr<SDL_Surface, SDLDeleter> text_surface(
+		TTF_RenderText_Solid(font.get(), msg.c_str(), {255, 255, 255}),
+		SDLDeleter()
+	);
+
+	if (text_surface.get() == nullptr) {
+		throw std::runtime_error(SDL_GetError());
+	}
+
+
+	// Create text texture.
+	std::unique_ptr<SDL_Texture, SDLDeleter> text_texture(
+		SDL_CreateTextureFromSurface(renderer.get(), text_surface.get()),
+		SDLDeleter()
+	);
+
+	if (text_texture.get() == nullptr) {
+		throw std::runtime_error(SDL_GetError());
+	}
+
+
+	static SDL_Rect text_rect;
+
+	SDL_QueryTexture(text_texture.get(), nullptr, nullptr, &text_rect.w, &text_rect.h);
+	text_rect.x = x;
+	text_rect.y = y;
+
+	return SDL_RenderCopy(renderer.get(), text_texture.get(), nullptr, &text_rect);
+
+}
+
+
 int main(int argc, char* argv[]) {
 
 	bool running {true};
@@ -51,19 +98,6 @@ int main(int argc, char* argv[]) {
 
 	if (window.get() == nullptr) {
 		throw std::runtime_error(SDL_GetError());
-	}
-
-
-	// Load a system font.
-	const std::string fontpath {"src/resources/fonts/Inconsolata-Regular.ttf"};
-
-	std::unique_ptr<TTF_Font, SDLDeleter> font(
-		TTF_OpenFont(fontpath.c_str(), 14),
-		SDLDeleter()
-	);
-
-	if (font == nullptr) {
-		throw std::runtime_error("Failed to load font at " + fontpath);
 	}
 
 
@@ -101,6 +135,9 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		// Clear renderer.
+		SDL_RenderClear(renderer.get());
+
 		
 		// Do stuff..
 
@@ -112,8 +149,6 @@ int main(int argc, char* argv[]) {
 		fps_times[fps_times_index] = fps_time_current - fps_time_last;
 		fps_time_last = fps_time_current;
 
-		++fps_frame_count;
-
 		fps = 0;
 		for(const auto& i: fps_times) {
 			fps += i;
@@ -123,40 +158,15 @@ int main(int argc, char* argv[]) {
 		fps = 1000.f / fps;
 
 
-		// Create text surface.
-		std::unique_ptr<SDL_Surface, SDLDeleter> text_surface(
-			TTF_RenderText_Solid(font.get(), ("FPS: " + std::to_string(fps)).c_str(), {255, 255, 255}),
-			SDLDeleter()
-		);
-
-		if (text_surface.get() == nullptr) {
-			throw std::runtime_error(SDL_GetError());
-		}
-
-
-		// Create text texture.
-		std::unique_ptr<SDL_Texture, SDLDeleter> text_texture(
-			SDL_CreateTextureFromSurface(renderer.get(), text_surface.get()),
-			SDLDeleter()
-		);
-
-		if (text_texture.get() == nullptr) {
-			throw std::runtime_error(SDL_GetError());
-		}
-
-		static SDL_Rect text_rect;
-
-		// Set Rect dimensions based on font.
-		SDL_QueryTexture(text_texture.get(), nullptr, nullptr, &text_rect.w, &text_rect.h);
-		text_rect.x = 0;
-		text_rect.y = 0;
-
-
-		// Render font.
-		SDL_RenderClear(renderer.get());
-		SDL_RenderCopy(renderer.get(), text_texture.get(), nullptr, &text_rect); 
+		// Render some stats.
+		renderDebugText(renderer, 0, 0, "Frame: " + std::to_string(fps_frame_count));
+		renderDebugText(renderer, 0, 16, "FPS: " + std::to_string((int)fps));
+		
+		// Update screen.
 		SDL_RenderPresent(renderer.get());
 
+		// Update frame count.
+		++fps_frame_count;
 
 	}
 
