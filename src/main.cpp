@@ -12,19 +12,25 @@
 
 
 struct SDLDeleter {
-	void operator()(SDL_Window *p) const { SDL_DestroyWindow(p); }
-	void operator()(SDL_Renderer *p) const { SDL_DestroyRenderer(p); }
-	void operator()(SDL_Texture *p) const { SDL_DestroyTexture(p); }
-	void operator()(SDL_Surface *p) const { SDL_FreeSurface(p); }
-	void operator()(TTF_Font *p) const { TTF_CloseFont(p); }
+	void operator()(SDL_Window*		p) const { SDL_DestroyWindow(p); }
+	void operator()(SDL_Renderer* 	p) const { SDL_DestroyRenderer(p); }
+	void operator()(SDL_Texture* 	p) const { SDL_DestroyTexture(p); }
+	void operator()(SDL_Surface* 	p) const { SDL_FreeSurface(p); }
+	void operator()(TTF_Font* 		p) const { TTF_CloseFont(p); }
 };
 
+using SDLWindowPointer 		= std::unique_ptr<SDL_Window, 	SDLDeleter>;
+using SDLRendererPointer 	= std::unique_ptr<SDL_Renderer, SDLDeleter>;
+using SDLTexturePointer 	= std::unique_ptr<SDL_Texture, 	SDLDeleter>;
+using SDLSurfacePointer 	= std::unique_ptr<SDL_Surface, 	SDLDeleter>;
+using SDLFontPointer 		= std::unique_ptr<TTF_Font, 	SDLDeleter>;
 
-int renderDebugText(const std::unique_ptr<SDL_Renderer, SDLDeleter> &renderer, int x, int y, const std::string &msg) {
+
+int renderDebugText(const SDLRendererPointer &renderer, int x, int y, const std::string &msg) {
 
 	static const std::string fontpath {"src/resources/fonts/Inconsolata-Regular.ttf"};
 
-	static std::unique_ptr<TTF_Font, SDLDeleter> font(
+	static SDLFontPointer font(
 		TTF_OpenFont(fontpath.c_str(), 14),
 		SDLDeleter()
 	);
@@ -35,7 +41,7 @@ int renderDebugText(const std::unique_ptr<SDL_Renderer, SDLDeleter> &renderer, i
 
 
 	// Create text surface.
-	std::unique_ptr<SDL_Surface, SDLDeleter> text_surface(
+	SDLSurfacePointer text_surface(
 		TTF_RenderText_Solid(font.get(), msg.c_str(), {255, 255, 255}),
 		SDLDeleter()
 	);
@@ -46,7 +52,7 @@ int renderDebugText(const std::unique_ptr<SDL_Renderer, SDLDeleter> &renderer, i
 
 
 	// Create text texture.
-	std::unique_ptr<SDL_Texture, SDLDeleter> text_texture(
+	SDLTexturePointer text_texture(
 		SDL_CreateTextureFromSurface(renderer.get(), text_surface.get()),
 		SDLDeleter()
 	);
@@ -91,7 +97,7 @@ int main(int argc, char* argv[]) {
 
 
 	// Create our window.
-	std::unique_ptr<SDL_Window, SDLDeleter> window(
+	SDLWindowPointer window(
 		SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_SHOWN),
 		SDLDeleter()
 	);
@@ -102,7 +108,7 @@ int main(int argc, char* argv[]) {
 
 
 	// Create renderer.
-	std::unique_ptr<SDL_Renderer, SDLDeleter> renderer(
+	SDLRendererPointer renderer(
 		SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED),
 		SDLDeleter()
 	);
