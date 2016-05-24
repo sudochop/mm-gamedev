@@ -2,9 +2,13 @@
 #include <stdexcept>
 #include <memory>
 #include <string>
+#include <array>
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+
+
+#define FPS_AVERAGE_OF 100
 
 
 struct SDLDeleter {
@@ -79,12 +83,17 @@ int main(int argc, char* argv[]) {
 	SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
 
 
-	int frame {1};
-	SDL_Rect text_rect;
-	SDL_Event e;
+	// FPS stuff.
+	float 	fps {0};
+	Uint32 	fps_frame_count {0};
+	Uint32 	fps_time_last {SDL_GetTicks()};
 
+	std::array<Uint32, FPS_AVERAGE_OF> fps_times;
+	fps_times.fill(0);
+	
 
 	// Game loop.
+	SDL_Event e;
 	while (running) {
 		while (SDL_PollEvent(&e) != 0) {
 			if (e.type == SDL_QUIT) {
@@ -92,9 +101,31 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		
+		// Do stuff..
+
+
+		// Calculate and draw average fps.
+		Uint32 fps_times_index = fps_frame_count % FPS_AVERAGE_OF;
+		Uint32 fps_time_current = SDL_GetTicks();
+
+		fps_times[fps_times_index] = fps_time_current - fps_time_last;
+		fps_time_last = fps_time_current;
+
+		++fps_frame_count;
+
+		fps = 0;
+		for(const auto& i: fps_times) {
+			fps += i;
+		}
+
+		fps /= FPS_AVERAGE_OF;
+		fps = 1000.f / fps;
+
+
 		// Create text surface.
 		std::unique_ptr<SDL_Surface, SDLDeleter> text_surface(
-			TTF_RenderText_Solid(font.get(), ("Frame: " + std::to_string(frame)).c_str(), {255, 255, 255}),
+			TTF_RenderText_Solid(font.get(), ("FPS: " + std::to_string(fps)).c_str(), {255, 255, 255}),
 			SDLDeleter()
 		);
 
@@ -113,6 +144,7 @@ int main(int argc, char* argv[]) {
 			throw std::runtime_error(SDL_GetError());
 		}
 
+		static SDL_Rect text_rect;
 
 		// Set Rect dimensions based on font.
 		SDL_QueryTexture(text_texture.get(), nullptr, nullptr, &text_rect.w, &text_rect.h);
@@ -125,8 +157,6 @@ int main(int argc, char* argv[]) {
 		SDL_RenderCopy(renderer.get(), text_texture.get(), nullptr, &text_rect); 
 		SDL_RenderPresent(renderer.get());
 
-
-		frame++;
 
 	}
 
