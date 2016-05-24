@@ -106,7 +106,7 @@ int main(int argc, char* argv[]) {
 
 
 		// Set Rect dimensions based on font.
-		SDL_QueryTexture(textTexture.get(), NULL, NULL, &solidRect.w, &solidRect.h);
+		SDL_QueryTexture(textTexture.get(), nullptr, nullptr, &solidRect.w, &solidRect.h);
 		solidRect.x = 0;
 		solidRect.y = 0;
 
