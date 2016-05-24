@@ -7,7 +7,7 @@
 #include <SDL2/SDL_ttf.h>
 
 
-struct sdl_deleter {
+struct SDLDeleter {
 	void operator()(SDL_Window *p) const { SDL_DestroyWindow(p); }
 	void operator()(SDL_Renderer *p) const { SDL_DestroyRenderer(p); }
 	void operator()(SDL_Texture *p) const { SDL_DestroyTexture(p); }
@@ -40,9 +40,9 @@ int main(int argc, char* argv[]) {
 
 
 	// Create our window.
-	std::unique_ptr<SDL_Window, sdl_deleter> window(
+	std::unique_ptr<SDL_Window, SDLDeleter> window(
 		SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_SHOWN),
-		sdl_deleter()
+		SDLDeleter()
 	);
 
 	if (window.get() == nullptr) {
@@ -51,22 +51,22 @@ int main(int argc, char* argv[]) {
 
 
 	// Load a system font.
-	const std::string fontPath {"src/resources/fonts/Inconsolata-Regular.ttf"};
+	const std::string fontpath {"src/resources/fonts/Inconsolata-Regular.ttf"};
 
-	std::unique_ptr<TTF_Font, sdl_deleter> font(
-		TTF_OpenFont(fontPath.c_str(), 14),
-		sdl_deleter()
+	std::unique_ptr<TTF_Font, SDLDeleter> font(
+		TTF_OpenFont(fontpath.c_str(), 14),
+		SDLDeleter()
 	);
 
 	if (font == nullptr) {
-		throw std::runtime_error("Failed to load font at " + fontPath);
+		throw std::runtime_error("Failed to load font at " + fontpath);
 	}
 
 
 	// Create renderer.
-	std::unique_ptr<SDL_Renderer, sdl_deleter> renderer(
+	std::unique_ptr<SDL_Renderer, SDLDeleter> renderer(
 		SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED),
-		sdl_deleter()
+		SDLDeleter()
 	);
 
 	if (renderer.get() == nullptr) {
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 
 
 	int frame {1};
-	SDL_Rect solidRect;
+	SDL_Rect text_rect;
 	SDL_Event e;
 
 
@@ -93,36 +93,36 @@ int main(int argc, char* argv[]) {
 		}
 
 		// Create text surface.
-		std::unique_ptr<SDL_Surface, sdl_deleter> textSurface(
+		std::unique_ptr<SDL_Surface, SDLDeleter> text_surface(
 			TTF_RenderText_Solid(font.get(), ("Frame: " + std::to_string(frame)).c_str(), {255, 255, 255}),
-			sdl_deleter()
+			SDLDeleter()
 		);
 
-		if (textSurface.get() == nullptr) {
+		if (text_surface.get() == nullptr) {
 			throw std::runtime_error(SDL_GetError());
 		}
 
 
 		// Create text texture.
-		std::unique_ptr<SDL_Texture, sdl_deleter> textTexture(
-			SDL_CreateTextureFromSurface(renderer.get(), textSurface.get()),
-			sdl_deleter()
+		std::unique_ptr<SDL_Texture, SDLDeleter> text_texture(
+			SDL_CreateTextureFromSurface(renderer.get(), text_surface.get()),
+			SDLDeleter()
 		);
 
-		if (textTexture.get() == nullptr) {
+		if (text_texture.get() == nullptr) {
 			throw std::runtime_error(SDL_GetError());
 		}
 
 
 		// Set Rect dimensions based on font.
-		SDL_QueryTexture(textTexture.get(), nullptr, nullptr, &solidRect.w, &solidRect.h);
-		solidRect.x = 0;
-		solidRect.y = 0;
+		SDL_QueryTexture(text_texture.get(), nullptr, nullptr, &text_rect.w, &text_rect.h);
+		text_rect.x = 0;
+		text_rect.y = 0;
 
 
 		// Render font.
 		SDL_RenderClear(renderer.get());
-		SDL_RenderCopy(renderer.get(), textTexture.get(), nullptr, &solidRect); 
+		SDL_RenderCopy(renderer.get(), text_texture.get(), nullptr, &text_rect); 
 		SDL_RenderPresent(renderer.get());
 
 
