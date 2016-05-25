@@ -3,74 +3,15 @@
 #include <memory>
 #include <string>
 #include <array>
-
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
+#include "sdl.h"
 
 #define FPS_AVERAGE_OF 100
 
 
-struct SDLDeleter {
-	void operator()(SDL_Window*		p) const { SDL_DestroyWindow(p); }
-	void operator()(SDL_Renderer*	p) const { SDL_DestroyRenderer(p); }
-	void operator()(SDL_Texture*	p) const { SDL_DestroyTexture(p); }
-	void operator()(SDL_Surface*	p) const { SDL_FreeSurface(p); }
-	void operator()(TTF_Font*		p) const { TTF_CloseFont(p); }
-};
-
-using SDLWindowPointer 		= std::unique_ptr<SDL_Window, 	SDLDeleter>;
-using SDLRendererPointer 	= std::unique_ptr<SDL_Renderer, SDLDeleter>;
-using SDLTexturePointer 	= std::unique_ptr<SDL_Texture, 	SDLDeleter>;
-using SDLSurfacePointer 	= std::unique_ptr<SDL_Surface, 	SDLDeleter>;
-using SDLFontPointer 		= std::unique_ptr<TTF_Font, 	SDLDeleter>;
-
-
-int renderDebugText(const SDLRendererPointer &renderer, int x, int y, const std::string &msg) {
-
-	static const std::string fontpath {"src/resources/fonts/Inconsolata-Regular.ttf"};
-
-	static SDLFontPointer font(
-		TTF_OpenFont(fontpath.c_str(), 14),
-		SDLDeleter()
-	);
-
-	if (font == nullptr) {
-		throw std::runtime_error("Failed to load font at " + fontpath);
-	}
-
-
-	// Create text surface.
-	SDLSurfacePointer text_surface(
-		TTF_RenderText_Solid(font.get(), msg.c_str(), {255, 255, 255}),
-		SDLDeleter()
-	);
-
-	if (text_surface.get() == nullptr) {
-		throw std::runtime_error(SDL_GetError());
-	}
-
-
-	// Create text texture.
-	SDLTexturePointer text_texture(
-		SDL_CreateTextureFromSurface(renderer.get(), text_surface.get()),
-		SDLDeleter()
-	);
-
-	if (text_texture.get() == nullptr) {
-		throw std::runtime_error(SDL_GetError());
-	}
-
-
-	static SDL_Rect text_rect;
-
-	SDL_QueryTexture(text_texture.get(), nullptr, nullptr, &text_rect.w, &text_rect.h);
-	text_rect.x = x;
-	text_rect.y = y;
-
-	return SDL_RenderCopy(renderer.get(), text_texture.get(), nullptr, &text_rect);
-
-}
+int renderDebugText(const sdl::RendererPointer &renderer, int x, int y, const std::string &msg);
 
 
 int main(int argc, char* argv[]) {
@@ -80,42 +21,30 @@ int main(int argc, char* argv[]) {
 	const int window_height {480};
 
 
-	// Initialize video subsystem.
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		throw std::runtime_error("SDL_Init");
-	}
-
-	// Make sure we have a cursor.
-	if (SDL_ShowCursor(SDL_DISABLE) < 0) {
-		throw std::runtime_error("SDL_ShowCursor");
-	}
-
-	// Initialize the truetype font API. 
-	if (TTF_Init() < 0) {
-		throw std::runtime_error(TTF_GetError());
-	}
+	sdl::init();
 
 
 	// Create our window.
-	SDLWindowPointer window(
-		SDL_CreateWindow("Game", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_SHOWN),
-		SDLDeleter()
-	);
-
-	if (window.get() == nullptr) {
-		throw std::runtime_error(SDL_GetError());
-	}
+	auto window { sdl::unique_ptr(
+		SDL_CreateWindow(
+			"Game",
+			SDL_WINDOWPOS_CENTERED,
+			SDL_WINDOWPOS_CENTERED,
+			window_width,
+			window_height,
+			SDL_WINDOW_SHOWN
+		))
+	};
 
 
 	// Create renderer.
-	SDLRendererPointer renderer(
-		SDL_CreateRenderer(window.get(), -1, SDL_RENDERER_ACCELERATED),
-		SDLDeleter()
-	);
-
-	if (renderer.get() == nullptr) {
-		throw std::runtime_error(SDL_GetError());
-	}
+	auto renderer { sdl::unique_ptr(
+		SDL_CreateRenderer(
+			window.get(),
+			-1,
+			SDL_RENDERER_ACCELERATED
+		))
+	};
 
 
 	// Set renderer size and clear color.
@@ -176,8 +105,36 @@ int main(int argc, char* argv[]) {
 
 	}
 
-	SDL_Quit();
+	sdl::quit();
 
 	return 0;
+
+}
+
+
+int renderDebugText(const sdl::RendererPointer &renderer, int x, int y, const std::string &msg) {
+
+	static SDL_Rect text_rect;
+
+	// Open font.
+	static auto font { sdl::unique_ptr(
+		TTF_OpenFont("src/resources/fonts/Inconsolata-Regular.ttf", 14)
+	)};
+
+	// Create text surface.
+	auto text_surface { sdl::unique_ptr(
+		TTF_RenderText_Solid(font.get(), msg.c_str(), {255, 255, 255})
+	)};
+
+	// Create text texture.
+	auto text_texture { sdl::unique_ptr(
+		SDL_CreateTextureFromSurface(renderer.get(), text_surface.get())
+	)};
+
+	SDL_QueryTexture(text_texture.get(), nullptr, nullptr, &text_rect.w, &text_rect.h);
+	text_rect.x = x;
+	text_rect.y = y;
+
+	return SDL_RenderCopy(renderer.get(), text_texture.get(), nullptr, &text_rect);
 
 }
