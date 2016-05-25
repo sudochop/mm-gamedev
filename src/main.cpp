@@ -5,13 +5,10 @@
 #include <array>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
-
 #include "sdl.h"
+#include "graphics.h"
 
 #define FPS_AVERAGE_OF 100
-
-
-int renderDebugText(const sdl::RendererPointer &renderer, int x, int y, const std::string &msg);
 
 
 int main(int argc, char* argv[]) {
@@ -94,8 +91,8 @@ int main(int argc, char* argv[]) {
 
 
 		// Render some stats.
-		renderDebugText(renderer, 0, 0, "Frame: " + std::to_string(fps_frame_count));
-		renderDebugText(renderer, 0, 16, "FPS: " + std::to_string((int)fps));
+		sdl::renderDebugText(renderer, 0, 0, "Frame: " + std::to_string(fps_frame_count));
+		sdl::renderDebugText(renderer, 0, 16, "FPS:   " + std::to_string((int)fps));
 		
 		// Update screen.
 		SDL_RenderPresent(renderer.get());
@@ -108,33 +105,5 @@ int main(int argc, char* argv[]) {
 	sdl::quit();
 
 	return 0;
-
-}
-
-
-int renderDebugText(const sdl::RendererPointer &renderer, int x, int y, const std::string &msg) {
-
-	static SDL_Rect text_rect;
-
-	// Open font.
-	static auto font { sdl::unique_ptr(
-		TTF_OpenFont("src/resources/fonts/Inconsolata-Regular.ttf", 14)
-	)};
-
-	// Create text surface.
-	auto text_surface { sdl::unique_ptr(
-		TTF_RenderText_Solid(font.get(), msg.c_str(), {255, 255, 255})
-	)};
-
-	// Create text texture.
-	auto text_texture { sdl::unique_ptr(
-		SDL_CreateTextureFromSurface(renderer.get(), text_surface.get())
-	)};
-
-	SDL_QueryTexture(text_texture.get(), nullptr, nullptr, &text_rect.w, &text_rect.h);
-	text_rect.x = x;
-	text_rect.y = y;
-
-	return SDL_RenderCopy(renderer.get(), text_texture.get(), nullptr, &text_rect);
 
 }
