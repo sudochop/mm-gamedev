@@ -5,6 +5,7 @@
 #include <array>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include "sdl.h"
 #include "graphics.h"
 
@@ -49,6 +50,21 @@ int main(int argc, char* argv[]) {
 	SDL_SetRenderDrawColor(renderer.get(), 0, 0, 0, 255);
 
 
+	// Random background image to test SDL_Image.
+	auto img_bg { sdl::unique_ptr(
+		IMG_LoadTexture(renderer.get(), "src/resources/background.png")
+	)};
+
+	int img_bg_w, img_bg_h;
+	SDL_QueryTexture(img_bg.get(), nullptr, nullptr, &img_bg_w, &img_bg_h);
+	
+	SDL_Rect img_bg_rect;
+	img_bg_rect.x = 0;
+	img_bg_rect.x = 0;
+	img_bg_rect.w = img_bg_w;
+	img_bg_rect.h = img_bg_h;
+
+
 	// FPS stuff.
 	float 	fps {0};
 	Uint32 	fps_frame_count {0};
@@ -71,7 +87,8 @@ int main(int argc, char* argv[]) {
 		SDL_RenderClear(renderer.get());
 
 		
-		// Do stuff..
+		// Render background image.
+		SDL_RenderCopy(renderer.get(), img_bg.get(), NULL, &img_bg_rect);
 
 
 		// Calculate and draw average fps.
