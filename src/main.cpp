@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <array>
+#include <chrono>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
@@ -13,6 +14,10 @@
 
 
 int main(int argc, char* argv[]) {
+
+	using std::chrono::high_resolution_clock;
+	using std::chrono::microseconds;
+	using std::chrono::duration_cast;
 
 	bool running {true};
 	const int window_width {640};
@@ -40,7 +45,7 @@ int main(int argc, char* argv[]) {
 		SDL_CreateRenderer(
 			window.get(),
 			-1,
-			SDL_RENDERER_ACCELERATED
+			SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
 		))
 	};
 
@@ -66,12 +71,10 @@ int main(int argc, char* argv[]) {
 
 
 	// FPS stuff.
-	float 	fps {0};
-	Uint32 	fps_frame_count {0};
-	Uint32 	fps_time_last {SDL_GetTicks()};
-
-	std::array<Uint32, FPS_AVERAGE_OF> fps_times;
-	fps_times.fill(0);
+	auto fps {0};
+	auto fps_frame_count {0};
+	auto fps_time_last {high_resolution_clock::now()};
+	std::array<microseconds, FPS_AVERAGE_OF> fps_times;
 	
 
 	// Game loop.
@@ -92,19 +95,19 @@ int main(int argc, char* argv[]) {
 
 
 		// Calculate and draw average fps.
-		Uint32 fps_times_index = fps_frame_count % FPS_AVERAGE_OF;
-		Uint32 fps_time_current = SDL_GetTicks();
+		int fps_times_index {fps_frame_count % FPS_AVERAGE_OF};
+		const auto fps_time_current {high_resolution_clock::now()};
 
-		fps_times[fps_times_index] = fps_time_current - fps_time_last;
+		fps_times[fps_times_index] = duration_cast<microseconds>(fps_time_current - fps_time_last);
 		fps_time_last = fps_time_current;
 
 		fps = 0;
 		for(const auto& i: fps_times) {
-			fps += i;
+			fps += i.count();
 		}
 
 		fps /= FPS_AVERAGE_OF;
-		fps = 1000.f / fps;
+		fps = 1000000.f / fps;
 
 
 		// Render some stats.
