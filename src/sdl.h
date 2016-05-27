@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <type_traits>
+#include <stdexcept>
 #include <system_error>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
