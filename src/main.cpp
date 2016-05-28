@@ -5,7 +5,7 @@ int main(int argc, char* argv[]) {
 
 	Engine engine(Config("config.ini"));
 
-	engine.run();
+	while (engine.Tick()) {}
 
 	return 0;
 

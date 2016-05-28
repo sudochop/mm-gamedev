@@ -6,37 +6,35 @@
 
 
 class Config {
-private:
-	INIReader reader;
-
 public:
 	Config(std::string filename);
-	~Config();
-
+	
 	void reload();
 
-	int windowWidth 	= 0;
-	int windowHeight 	= 0;
+	int window_width() const { return window_width_; }
+	int window_height() const { return window_height_; }
+
+private:
+	INIReader reader_;
+
+	int window_width_ 	= 0;
+	int window_height_ 	= 0;
+
 };
 
 
-Config::Config(std::string filename): reader(filename) {
-	if (reader.ParseError() < 0) {
+Config::Config(std::string filename): reader_(filename) {
+	if (reader_.ParseError() < 0) {
         throw std::runtime_error("Couldn't load " + filename);
     }
 	this->reload();
 }
 
 
-Config::~Config() {
-
-}
-
-
 void Config::reload() {
 
-	this->windowWidth 	= (int) this->reader.GetInteger("window", "width", this->windowWidth);
-	this->windowHeight 	= (int) this->reader.GetInteger("window", "height", this->windowHeight);
+	this->window_width_	= (int) this->reader_.GetInteger("window", "width", this->window_width_);
+	this->window_height_ = (int) this->reader_.GetInteger("window", "height", this->window_height_);
 
 }
 

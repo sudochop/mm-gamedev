@@ -3,50 +3,55 @@
 
 #include <SDL2/SDL.h>
 #include "sdl.h"
+#include "Config.h"
+#include "Timer.h"
 
 
 class Engine {
-private:
-	const Config& config;
-	
-	sdl::WindowPointer 		window;
-	sdl::RendererPointer 	renderer;
-
-	bool running = true;
-
 public:
 	Engine(const Config&);
 	~Engine();
 
-	void run();
+	bool Tick();
+
+private:
+	const Config& config_;
+
+	Timer<nanoseconds> timer_;
+	
+	sdl::WindowPointer 		window_;
+	sdl::RendererPointer 	renderer_;
+
+	static const int kFpsAverage = 100;
+
 };
 
 
-Engine::Engine(const Config &config_): config(config_) {
+Engine::Engine(const Config &config): config_(config) {
 
 	sdl::init();
 
-	this->window = sdl::unique_ptr(
+	this->window_ = sdl::unique_ptr(
 		SDL_CreateWindow(
 			"Game",
 			SDL_WINDOWPOS_CENTERED,
 			SDL_WINDOWPOS_CENTERED,
-			this->config.windowWidth,
-			this->config.windowHeight,
+			this->config_.window_width(),
+			this->config_.window_height(),
 			SDL_WINDOW_SHOWN
 		)
 	);
 
-	this->renderer = sdl::unique_ptr(
+	this->renderer_ = sdl::unique_ptr(
 		SDL_CreateRenderer(
-			window.get(),
+			window_.get(),
 			-1,
 			SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC
 		)
 	);
 
-	SDL_RenderSetLogicalSize(this->renderer.get(), this->config.windowWidth, this->config.windowHeight);
-	SDL_SetRenderDrawColor(this->renderer.get(), 0, 0, 0, 255);
+	SDL_RenderSetLogicalSize(this->renderer_.get(), this->config_.window_width(), this->config_.window_height());
+	SDL_SetRenderDrawColor(this->renderer_.get(), 0, 0, 0, 255);
 
 }
 
@@ -58,19 +63,20 @@ Engine::~Engine() {
 }
 
 
-void Engine::run() {
+bool Engine::Tick() {
 
 	SDL_Event e;
 
-	while (this->running) {
-
-		while (SDL_PollEvent(&e) != 0) {
-			if (e.type == SDL_QUIT) {
-				running = false;
-			}
+	while (SDL_PollEvent(&e) != 0) {
+		if (e.type == SDL_QUIT) {
+			return false;
 		}
-
 	}
+
+	SDL_Delay(1000);
+	printf("%lld\n", timer_.Tick().count());
+
+	return true;
 
 }
 
