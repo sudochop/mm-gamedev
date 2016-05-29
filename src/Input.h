@@ -9,12 +9,13 @@
 template<typename T>
 class Input {
 public:
-	void PollEvent(SDL_Event e);
+	void PollEvent();
 	bool IsPressed(SDL_Scancode key);
 	bool IsReleased(SDL_Scancode key);
 	bool SignalQuit();
 	T Elapsed(SDL_Scancode key);
 private:
+	SDL_Event e;
 	bool signal_quit_ = false;
 	std::map<SDL_Scancode, Timer<T>> key_times_;
 	std::map<SDL_Scancode, bool> keys_pressed_;
@@ -23,7 +24,7 @@ private:
 
 
 template<typename T>
-void Input<T>::PollEvent(SDL_Event e) {
+void Input<T>::PollEvent() {
 	
 	keys_released_.clear();
 	signal_quit_ = false;

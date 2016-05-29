@@ -28,8 +28,6 @@ private:
 
 	Timer<TimePrecision> timer_;
 	Input<TimePrecision> input_;
-
-	SDL_Event event_;
 	
 	sdl::WindowPointer 		window_;
 	sdl::RendererPointer 	renderer_;
@@ -88,7 +86,7 @@ bool Engine::Tick() {
 	static auto right = 0.0f;
 
 
-	input_.PollEvent(event_);
+	input_.PollEvent();
 
 	if (input_.SignalQuit()) {
 		return false;
