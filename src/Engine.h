@@ -8,8 +8,10 @@
 #include "graphics.h"
 #include "Config.h"
 #include "Timer.h"
+#include "Input.h"
 
 typedef nanoseconds TimePrecision;
+
 
 
 class Engine {
@@ -25,6 +27,9 @@ private:
 	const Config& config_;
 
 	Timer<TimePrecision> timer_;
+	Input<TimePrecision> input_;
+
+	SDL_Event event_;
 	
 	sdl::WindowPointer 		window_;
 	sdl::RendererPointer 	renderer_;
@@ -61,6 +66,8 @@ Engine::Engine(const Config &config): config_(config) {
 	SDL_RenderSetLogicalSize(renderer_.get(), config_.window_width(), config_.window_height());
 	SDL_SetRenderDrawColor(renderer_.get(), 0, 0, 0, 255);
 
+	timer_.Start();
+
 }
 
 
@@ -75,17 +82,52 @@ bool Engine::Tick() {
 
 	auto delta = timer_.Tick();
 
-	SDL_Event e;
+	static auto up = 0.0f;
+	static auto down = 0.0f;
+	static auto left = 0.0f;
+	static auto right = 0.0f;
 
-	while (SDL_PollEvent(&e) != 0) {
-		if (e.type == SDL_QUIT) {
-			return false;
-		}
+
+	input_.PollEvent(event_);
+
+	if (input_.SignalQuit()) {
+		return false;
 	}
+
+	if (input_.IsPressed(SDL_SCANCODE_UP)) {
+		up = input_.Elapsed(SDL_SCANCODE_UP).count() / (double)timer_.second();
+	}
+	if (input_.IsPressed(SDL_SCANCODE_DOWN)) {
+		down = input_.Elapsed(SDL_SCANCODE_DOWN).count() / (double)timer_.second();
+	}
+	if (input_.IsPressed(SDL_SCANCODE_LEFT)) {
+		left = input_.Elapsed(SDL_SCANCODE_LEFT).count() / (double)timer_.second();
+	}
+	if (input_.IsPressed(SDL_SCANCODE_RIGHT)) {
+		right = input_.Elapsed(SDL_SCANCODE_RIGHT).count() / (double)timer_.second();
+	}
+
+	if (input_.IsReleased(SDL_SCANCODE_UP)) {
+		up = 0.0f;
+	}
+	if (input_.IsReleased(SDL_SCANCODE_DOWN)) {
+		down = 0.0f;
+	}
+	if (input_.IsReleased(SDL_SCANCODE_LEFT)) {
+		left = 0.0f;
+	}
+	if (input_.IsReleased(SDL_SCANCODE_RIGHT)) {
+		right = 0.0f;
+	}
+
 
 	SDL_RenderClear(renderer_.get());
 
 	RenderDebug(delta);
+	sdl::renderDebugText(renderer_, 0, 16, "U: " + std::to_string(up));
+	sdl::renderDebugText(renderer_, 0, 32, "D: " + std::to_string(down));
+	sdl::renderDebugText(renderer_, 0, 48, "L: " + std::to_string(left));
+	sdl::renderDebugText(renderer_, 0, 64, "R: " + std::to_string(right));
 
 	SDL_RenderPresent(renderer_.get());
 

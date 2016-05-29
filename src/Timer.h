@@ -16,20 +16,25 @@ typedef std::chrono::hours hours;
 template<typename T>
 class Timer {
 public:
-	Timer();
+	void Start();
 	T Tick();
+	T Elapsed();
 	void Reset();
 	auto second() const;
 
 private:
+	bool started_ = false;
 	Clock::time_point time_start_;
 	Clock::time_point time_last_;
 };
 
 
 template<typename T>
-Timer<T>::Timer() {
-	Reset();
+void Timer<T>::Start() {
+	if (!started_) {
+		Reset();
+		started_ = true;
+	}
 }
 
 
@@ -37,6 +42,7 @@ template<typename T>
 void Timer<T>::Reset() {
 	time_start_	= Clock::now();
 	time_last_	= Clock::now();
+	started_ = false;
 }
 
 
@@ -45,6 +51,14 @@ T Timer<T>::Tick() {
 	auto now = Clock::now();
 	auto delta = now - time_last_;
 	time_last_ = now;
+	return std::chrono::duration_cast<T>(delta);
+}
+
+
+template<typename T>
+T Timer<T>::Elapsed() {
+	auto now = Clock::now();
+	auto delta = now - time_start_;
 	return std::chrono::duration_cast<T>(delta);
 }
 
