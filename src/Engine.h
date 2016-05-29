@@ -9,6 +9,8 @@
 #include "Config.h"
 #include "Timer.h"
 
+typedef nanoseconds TimePrecision;
+
 
 class Engine {
 public:
@@ -18,11 +20,11 @@ public:
 	bool Tick();
 
 private:
-	void RenderDebug(nanoseconds);
+	void RenderDebug(TimePrecision);
 
 	const Config& config_;
 
-	Timer<nanoseconds> timer_;
+	Timer<TimePrecision> timer_;
 	
 	sdl::WindowPointer 		window_;
 	sdl::RendererPointer 	renderer_;
@@ -110,7 +112,7 @@ void Engine::RenderDebug(nanoseconds delta) {
 	fps /= kTickAverage;
 	fps = timer_.second() / fps;
 
-	sdl::renderDebugText(renderer_, 0, 16, "FPS:   " + std::to_string(fps));
+	sdl::renderDebugText(renderer_, 0, 0, "FPS:   " + std::to_string(fps));
 
 }
 
