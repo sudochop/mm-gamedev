@@ -124,10 +124,10 @@ bool Engine::Tick() {
 	SDL_RenderClear(renderer_.get());
 
 	RenderDebug(delta);
-	sdl::renderDebugText(renderer_, 0, 16, "U: " + std::to_string(up));
-	sdl::renderDebugText(renderer_, 0, 32, "D: " + std::to_string(down));
-	sdl::renderDebugText(renderer_, 0, 48, "L: " + std::to_string(left));
-	sdl::renderDebugText(renderer_, 0, 64, "R: " + std::to_string(right));
+	sdl::renderDebugText(renderer_, 0, 16, "k_U: " + std::to_string(up));
+	sdl::renderDebugText(renderer_, 0, 32, "k_D: " + std::to_string(down));
+	sdl::renderDebugText(renderer_, 0, 48, "k_L: " + std::to_string(left));
+	sdl::renderDebugText(renderer_, 0, 64, "k_R: " + std::to_string(right));
 
 	SDL_RenderPresent(renderer_.get());
 
@@ -154,7 +154,7 @@ void Engine::RenderDebug(nanoseconds delta) {
 	fps /= kTickAverage;
 	fps = timer_.second() / fps;
 
-	sdl::renderDebugText(renderer_, 0, 0, "FPS:   " + std::to_string(fps));
+	sdl::renderDebugText(renderer_, 0, 0, "FPS: " + std::to_string(fps));
 
 }
 
