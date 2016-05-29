@@ -27,14 +27,14 @@ Config::Config(std::string filename): reader_(filename) {
 	if (reader_.ParseError() < 0) {
         throw std::runtime_error("Couldn't load " + filename);
     }
-	this->reload();
+	reload();
 }
 
 
 void Config::reload() {
 
-	this->window_width_	= (int) this->reader_.GetInteger("window", "width", this->window_width_);
-	this->window_height_ = (int) this->reader_.GetInteger("window", "height", this->window_height_);
+	window_width_	= (int) reader_.GetInteger("window", "width", window_width_);
+	window_height_ = (int) reader_.GetInteger("window", "height", window_height_);
 
 }
 

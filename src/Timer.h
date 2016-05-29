@@ -19,6 +19,7 @@ public:
 	Timer();
 	T Tick();
 	void Reset();
+	auto second() const;
 
 private:
 	Clock::time_point time_start_;
@@ -28,23 +29,31 @@ private:
 
 template<typename T>
 Timer<T>::Timer() {
-	this->Reset();
+	Reset();
 }
 
 
 template<typename T>
 void Timer<T>::Reset() {
-	this->time_start_	= Clock::now();
-	this->time_last_	= Clock::now();
+	time_start_	= Clock::now();
+	time_last_	= Clock::now();
 }
 
 
 template<typename T>
 T Timer<T>::Tick() {
 	auto now = Clock::now();
-	auto delta = now - this->time_last_;
-	this->time_last_ = now;
+	auto delta = now - time_last_;
+	time_last_ = now;
 	return std::chrono::duration_cast<T>(delta);
+}
+
+
+template<typename T>
+auto Timer<T>::second() const {
+	using namespace std::chrono_literals;
+	T s = 1s;
+	return s.count();
 }
 
 

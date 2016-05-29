@@ -1,8 +1,11 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
 
+#include <array>
+#include <algorithm>
 #include <SDL2/SDL.h>
 #include "sdl.h"
+#include "graphics.h"
 #include "Config.h"
 #include "Timer.h"
 
@@ -15,6 +18,8 @@ public:
 	bool Tick();
 
 private:
+	void RenderDebug(nanoseconds);
+
 	const Config& config_;
 
 	Timer<nanoseconds> timer_;
@@ -22,7 +27,8 @@ private:
 	sdl::WindowPointer 		window_;
 	sdl::RendererPointer 	renderer_;
 
-	static const int kFpsAverage = 100;
+	static const int kTickAverage = 50;
+	std::array<int, kTickAverage> tick_times_;
 
 };
 
@@ -31,18 +37,18 @@ Engine::Engine(const Config &config): config_(config) {
 
 	sdl::init();
 
-	this->window_ = sdl::unique_ptr(
+	window_ = sdl::unique_ptr(
 		SDL_CreateWindow(
 			"Game",
 			SDL_WINDOWPOS_CENTERED,
 			SDL_WINDOWPOS_CENTERED,
-			this->config_.window_width(),
-			this->config_.window_height(),
+			config_.window_width(),
+			config_.window_height(),
 			SDL_WINDOW_SHOWN
 		)
 	);
 
-	this->renderer_ = sdl::unique_ptr(
+	renderer_ = sdl::unique_ptr(
 		SDL_CreateRenderer(
 			window_.get(),
 			-1,
@@ -50,8 +56,8 @@ Engine::Engine(const Config &config): config_(config) {
 		)
 	);
 
-	SDL_RenderSetLogicalSize(this->renderer_.get(), this->config_.window_width(), this->config_.window_height());
-	SDL_SetRenderDrawColor(this->renderer_.get(), 0, 0, 0, 255);
+	SDL_RenderSetLogicalSize(renderer_.get(), config_.window_width(), config_.window_height());
+	SDL_SetRenderDrawColor(renderer_.get(), 0, 0, 0, 255);
 
 }
 
@@ -65,6 +71,8 @@ Engine::~Engine() {
 
 bool Engine::Tick() {
 
+	auto delta = timer_.Tick();
+
 	SDL_Event e;
 
 	while (SDL_PollEvent(&e) != 0) {
@@ -73,10 +81,36 @@ bool Engine::Tick() {
 		}
 	}
 
-	SDL_Delay(1000);
-	printf("%lld\n", timer_.Tick().count());
+	SDL_RenderClear(renderer_.get());
+
+	RenderDebug(delta);
+
+	SDL_RenderPresent(renderer_.get());
 
 	return true;
+
+}
+
+
+void Engine::RenderDebug(nanoseconds delta) {
+
+	std::rotate(
+		std::begin(tick_times_),
+		std::next(std::begin(tick_times_)),
+		std::end(tick_times_)
+	);
+	*std::rbegin(tick_times_) = delta.count();
+
+
+	int fps = 0;
+	for(const auto& i: tick_times_) {
+		fps += i;
+	}
+
+	fps /= kTickAverage;
+	fps = timer_.second() / fps;
+
+	sdl::renderDebugText(renderer_, 0, 16, "FPS:   " + std::to_string(fps));
 
 }
 
